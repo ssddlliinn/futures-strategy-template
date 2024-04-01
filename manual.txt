@@ -1,0 +1,3 @@
+1. price data outputs values of both day and night 
+open/close/volume for TX values. The most important thing is 
+that it comes with datetime object for date column.

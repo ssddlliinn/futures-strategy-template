@@ -31,7 +31,7 @@ def get_contract_diff(whole_day_data, original):
     return whole_day_data
 
 
-def get_daily_info(start_date, end_date):
+def main(start_date, end_date):
     #記得挑一個有交易的起始與終點日
     #從Finmind取得資料或讀csv
     if 'price_data.csv'in os.listdir(Path(__file__).parent):
@@ -125,6 +125,6 @@ def get_daily_info(start_date, end_date):
     return all_day
 
 if __name__ == '__main__':
-    data = get_daily_info('2018-06-01','2023-06-30')
+    data = main('2018-06-01','2023-06-30')
     print(data.dtypes)
     
