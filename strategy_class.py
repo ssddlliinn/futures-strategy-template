@@ -12,15 +12,14 @@ from get_other_data import main as get_feature_data
 
 # price必須要有date(datetime)、trade_price(float)、div(float)欄位
 # 以及其他要計算indicator要用的欄位
-price = get_price_data('2018-06-01', '2023-06-30')
+price = get_price_data('2018-06-05', '2023-06-30')
 # feature 必須要有date(datetime)以及其他indicator欄位
-feature = get_feature_data('2018-06-01', '2023-06-30')
+feature = get_feature_data('2018-06-05', '2023-06-30')
 
 class futures_Strategy:
     def __init__(self) -> None: 
         self.price_data = price
         self.feature_data = feature
-        self.signal_list = []
         
         self.original_cash = 1200000
         self.current_asset = 1200000
@@ -39,18 +38,21 @@ class futures_Strategy:
     def calculate_indicator(self, paras):
         self.indicator = self.price_data[['date']].copy()
         self.paras = paras
-        #建立所有指標在self.indicator上，使用paras dict裡面的參數
+        if len(self.indicator) != len(self.feature_data):
+            raise "Unmatch length for price and feature"
+        # 建立trade_price, div以及所有指標在self.indicator上
+        # 使用paras dict裡面的參數
         # TODO:
         
-        
+        print(self.indicator.shape)
         self.indicator = self.indicator.dropna()
+        print(self.indicator.shape)
         
     #要套用到indicator df的函數
     def add_signal(self, date, signal, PL, lot, total_cash):
-        new_data = pd.Series([date, signal, pl, total_cash], index=['date','signal','PL','lot','total_cash'])
+        new_data = pd.DataFrame([[date, signal, PL, lot, total_cash]], columns=['date','signal','PL','lot','total_cash'])
         self.signal = pd.concat([self.signal, new_data], axis=0)
             
-    
     def strategy_signal(self):
         #平倉時再紀錄 #再決定訊號函數內，平倉時新增資料
         #成本用調整後、平倉用扣除費用後
@@ -135,7 +137,6 @@ class futures_Strategy:
                                 price,
                                 unrealized)
         
-    
     def KPI(self):
         if self.record.shape[0] == 0:
             output_KPI = {
@@ -160,7 +161,7 @@ class futures_Strategy:
         #計算return(報酬率)、return_cash(每筆獲利金額)欄位，加到record上面
         cost_per_lot = int(self.margin / self.point_value)
         self.record['return'] = ((self.record['cover'] - self.record['cost'])*self.record['signal']) / cost_per_lot
-        self.record['return_cash'] = self.record['return'] * self.record['lot'] * cost_per_lot
+        self.record['return_cash'] = self.record['return'] * self.record['lot'] * cost_per_lot * self.point_value
         
         
         #計算平均獲利百分比、獲利標準差與夏普比率
@@ -170,15 +171,15 @@ class futures_Strategy:
         
         #計算交易次數與勝率
         trade_times = len(self.record)
-        win_rate = round((self.record['return']).sum() / trade_times, 2)
+        win_rate = round((self.record['return'] > 0).sum() / trade_times, 2)
         
         #計算累積獲利、MDD
-        cum_return = self.signal.iloc[-1]['total_cash'] / self.original_cash
+        cum_return = round(self.signal.iloc[-1]['total_cash'] / self.original_cash, 4)
         mdd_df = pd.DataFrame()
         mdd_df['total_cash'] = self.signal['total_cash']
         mdd_df['historic_max'] = mdd_df['total_cash'].cummax()
         mdd_df['dropdown'] = round((mdd_df['total_cash'] / mdd_df['historic_max'])-1, 4)
-        MDD = mdd_df['dropdown'].min()
+        MDD = round(mdd_df['dropdown'].min(), 4)
         
         #計算獲利因子、賺賠比、期望值
         win_data = self.record[self.record['return'] > 0]
@@ -194,7 +195,7 @@ class futures_Strategy:
             profit_factor = '勝率100%'
             win_lose_ratio = '勝率100%'
         
-        expectation = win_data['return_cash'].mean() * win_rate + lose_data['return_cash'].mean() * (1-win_rate)
+        expectation = round(win_data['return_cash'].mean() * win_rate + lose_data['return_cash'].mean() * (1-win_rate), 0)
         
         #計算最大連續獲利/虧損次數
         max_continuous_wins = 0
@@ -251,6 +252,12 @@ class futures_Strategy:
             index_count = 0
         else:
             index_count = self.record.index[-1] + 1
+        
+        #平倉時扣除所有手續費
+        cost += (self.fee * signal)
+        cover -= (self.fee * signal)
+        unrealized -= (self.fee*2*lot*self.point_value)
+        
         #記錄到record上(只有交易日)
         self.record.at[index_count, 'in_date'] = in_date
         self.record.at[index_count, 'out_date'] = out_date
