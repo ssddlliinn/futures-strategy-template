@@ -23,7 +23,8 @@ class futures_Strategy:
         self.signal_list = []
         
         self.original_cash = 1200000
-        self.all_fee = 1
+        self.current_asset = 1200000
+        self.fee = 1
         self.point_value = 200
         self.margin = 500000
         self.hold_data = {
@@ -31,6 +32,7 @@ class futures_Strategy:
                 'signal':0,
                 'price':0,
                 'adjust_cost':0,
+                'lot':0,
                 'start':False,
                 'max':0}
         
@@ -38,26 +40,100 @@ class futures_Strategy:
         self.indicator = self.price_data[['date']].copy()
         self.paras = paras
         #建立所有指標在self.indicator上，使用paras dict裡面的參數
+        # TODO:
         
         
         self.indicator = self.indicator.dropna()
         
     #要套用到indicator df的函數
-    def set_signal(self, row):
-        pass
-        #取出self.paras的必要參數
-        
-        #根據hold_data內的資訊，建立策略機制
-        
+    def add_signal(self, date, signal, PL, lot, total_cash):
+        new_data = pd.Series([date, signal, pl, total_cash], index=['date','signal','PL','lot','total_cash'])
+        self.signal = pd.concat([self.signal, new_data], axis=0)
+            
     
     def strategy_signal(self):
         #平倉時再紀錄 #再決定訊號函數內，平倉時新增資料
-        #必備欄位in_date、out_date、signal、volume、cost、cover
-        self.record = pd.DataFrame(columns=['in_date', 'out_date', 'signal', 'volume', 'cost', 'cover'])
+        #成本用調整後、平倉用扣除費用後
+        #必備欄位in_date、out_date、signal、lot、cost、cover(點數紀錄)
+        self.record = pd.DataFrame(columns=['in_date', 'out_date', 'signal', 'lot', 'cost', 'cover'])
         
-        #每天都要記錄 #把indicator套入決定訊號函數 
-        #必備欄位date、signal、PL、volume、total_cash
-        self.signal = self.indicator.apply(self.set_signal, axis=1)
+
+        #取出self.paras的必要參數
+        # TODO:
+        
+        
+        
+        #每天都要記錄 #for迴圈跑過indicator決定訊號放入signal
+        #必備欄位date、signal、PL(點數)、lot、total_cash(現金)
+        self.signal = pd.DataFrame(columns=['date', 'signal', 'PL', 'lot', 'total_cash'])
+        
+        for index, row in self.indicator.iterrows():
+            #根據hold_data內的資訊，建立策略機制
+            if self.hold_data['signal'] == 0:
+                #取資料
+                date = row['date']
+                price = row['trade_price']
+                #設定進場條件
+                # TODO:
+                Buy_condition = []
+                    
+                Sell_condition = []
+                
+                if all(Buy_condition):
+                    self.new_Recording(date, price, 1)
+                elif all(Sell_condition):
+                    self.new_Recording(date, price, -1)
+                else:
+                    self.add_signal(date, 0, 0, 0, self.current_asset)
+                    
+            else:
+                #取資料
+                date = row['date']
+                price = row['trade_price']
+                adjust = row['div']
+                lot = self.hold_data['lot']
+                #遠近合約價差調整成本
+                self.hold_data['adjust_cost'] -= adjust
+                #計算當前獲利
+                PL = (price - self.hold_data['adjust_cost']) * self.hold_data['signal']
+                unrealized = self.current_asset + (PL*self.point_value*lot)
+                #針對停利所算的歷史最高獲利點數
+                self.hold_data['max'] = max(self.hold_data['max'], PL)
+                
+                #設定出場條件
+                # TODO:
+                offset_Buy_condition = []
+                
+                offset_Sell_condition = []
+                
+                if (self.hold_data['signal'] == 1) and any(offset_Buy_condition):
+                    self.cover_Recording(self.hold_data['date'],
+                                        date,
+                                        1,
+                                        lot,
+                                        self.hold_data['adjust_cost'],
+                                        price,
+                                        unrealized)
+                elif (self.hold_data['signal'] == -1) and any(offset_Sell_condition):
+                    self.cover_Recording(self.hold_data['date'],
+                                        date,
+                                        -1,
+                                        lot,
+                                        self.hold_data['adjust_cost'],
+                                        price,
+                                        unrealized)
+                else:
+                    self.add_signal(date, self.hold_data['signal'], PL, lot, unrealized)
+                
+        #所有日期跑完尚未平倉的話，直接平倉以計算交易KPI
+        if self.hold_data['signal'] != 0:
+            self.cover_Recording(self.hold_data['date'],
+                                date,
+                                self.hold_data['signal'],
+                                lot,
+                                self.hold_data['adjust_cost'],
+                                price,
+                                unrealized)
         
     
     def KPI(self):
@@ -84,7 +160,7 @@ class futures_Strategy:
         #計算return(報酬率)、return_cash(每筆獲利金額)欄位，加到record上面
         cost_per_lot = int(self.margin / self.point_value)
         self.record['return'] = ((self.record['cover'] - self.record['cost'])*self.record['signal']) / cost_per_lot
-        self.record['return_cash'] = self.record['return'] * self.record['volume'] * cost_per_lot
+        self.record['return_cash'] = self.record['return'] * self.record['lot'] * cost_per_lot
         
         
         #計算平均獲利百分比、獲利標準差與夏普比率
@@ -101,7 +177,7 @@ class futures_Strategy:
         mdd_df = pd.DataFrame()
         mdd_df['total_cash'] = self.signal['total_cash']
         mdd_df['historic_max'] = mdd_df['total_cash'].cummax()
-        mdd_df['dropdown'] = round((mdd_df['total_cash'] - mdd_df['historic_max']) / mdd_df['historic_max'], 4)
+        mdd_df['dropdown'] = round((mdd_df['total_cash'] / mdd_df['historic_max'])-1, 4)
         MDD = mdd_df['dropdown'].min()
         
         #計算獲利因子、賺賠比、期望值
@@ -159,17 +235,38 @@ class futures_Strategy:
     
         return output_KPI
     
-    def set_hold_data(self, ):
+    def new_Recording(self, date, price, signal):
+        lot = self.current_asset // self.margin
+        
+        self.hold_data['date'] = date
+        self.hold_data['signal'] = signal
+        self.hold_data['price'] = price
+        self.hold_data['adjust_cost'] = price
+        self.hold_data['lot'] = lot
+        
+        self.add_signal(date, signal, 0, lot, self.current_asset)
     
-    def Recording(self, in_date, out_date, signal, volume, cost, cover):
+    def cover_Recording(self, in_date, out_date, signal, lot, cost, cover, unrealized):
         if self.record.empty:
             index_count = 0
         else:
             index_count = self.record.index[-1] + 1
-        
+        #記錄到record上(只有交易日)
         self.record.at[index_count, 'in_date'] = in_date
         self.record.at[index_count, 'out_date'] = out_date
         self.record.at[index_count, 'signal'] = signal
-        self.record.at[index_count, 'volume'] = volume
+        self.record.at[index_count, 'lot'] = lot
         self.record.at[index_count, 'cost'] = cost
         self.record.at[index_count, 'cover'] = cover
+        
+        #平倉時調整其他相關變數
+        self.current_asset = unrealized
+        self.add_signal(out_date, 0, 0, 0, unrealized)
+        self.hold_data = {
+                        'date':'',
+                        'signal':0,
+                        'price':0,
+                        'adjust_cost':0,
+                        'lot':0,
+                        'start':False,
+                        'max':0}
