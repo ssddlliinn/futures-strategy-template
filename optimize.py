@@ -55,6 +55,7 @@ class trade_problem(Problem):
 
             KPI_dict = trade_obj.KPI()
             
+            #TODO: if want to pursue for other target values
             f1 = KPI_dict['cum_return']
             f2 = KPI_dict['MDD']
             g1 = -f1

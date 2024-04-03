@@ -1,3 +1,18 @@
 1. price data outputs values of both day and night 
 open/close/volume for TX values. The most important thing is 
 that it comes with datetime object for date column.
+
+2. modify get other data file to get other necessary datas for indicators in strategy. remember to save data to csv. return dataframe with date in datetime object.
+
+3. strategy class: 
+	a. calculate the indicator
+	b. get parameters
+	c. buy/sell condition
+	d. offset buy/sell condition
+
+4. optimize
+	a. set optimize parameters numbers and range
+	b. set the decode and put values into para dict
+	c. give all parameters name and its decode formula
+
+5. vizualization: give the desired values to xi list and assign it to para dict with parameter names
