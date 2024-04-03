@@ -3,6 +3,7 @@ from FinMind.data import DataLoader
 import pandas as pd
 import os
 from pathlib import Path
+from datetime import datetime
 
 def get_open(row, original):
     date = row['date']
@@ -34,12 +35,19 @@ def get_contract_diff(whole_day_data, original):
 def main(start_date, end_date, store_file):
     #記得挑一個有交易的起始與終點日
     #從Finmind取得資料或讀csv
-    if store_file in os.listdir(Path(__file__).parent):
-        all_day = pd.read_csv(Path(__file__).parent / store_file)
+    data_path = Path(__file__).parent.parent
+    if store_file in os.listdir(data_path):
+        all_day = pd.read_csv(data_path / store_file)
         if all_day is not None:
-            if (start_date == all_day.iloc[0].date) and (end_date == all_day.iloc[-1].date):
-                all_day['date'] = pd.to_datetime(all_day['date'])
-                return all_day
+            dt_start = datetime.strptime(start_date, '%Y-%m-%d')
+            dt_end = datetime.strptime(end_date, '%Y-%m-%d')
+            all_day['date'] = pd.to_datetime(all_day['date'])
+            # if (start_date == all_day.iloc[0].date) and (end_date == all_day.iloc[-1].date):
+            #     return all_day
+            if (dt_start >= all_day.iloc[0].date) and(dt_end <= all_day.iloc[-1].date):
+                return_df = all_day[(all_day['date'] >= dt_start) & (all_day['date'] <= dt_end)]
+                return return_df
+            
 
     api = DataLoader()
     df = api.taiwan_futures_daily(
@@ -119,12 +127,14 @@ def main(start_date, end_date, store_file):
     else:
         all_day = get_contract_diff(all_day, original=night)
         
-    all_day.to_csv(Path(__file__).parent / store_file, index=False)
+    all_day.to_csv(data_path / store_file, index=False)
     all_day['date'] = pd.to_datetime(all_day['date'])
 
     return all_day
 
 if __name__ == '__main__':
-    data = main('2018-06-01','2023-06-30')
+    data = main('2018-06-01','2023-06-30', 'price_data.csv')
     print(data.dtypes)
+    print(data.head(10))
+    print(data.tail(10))
     
