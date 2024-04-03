@@ -25,14 +25,14 @@ price_data_test, feature_data_test = get_all_data('2023-07-01',
                                                     'other_data_test.csv')
 test_trade = futures_Strategy(price_data_test, feature_data_test)
 
+#TODO:
+xi = []
 para = {}
 
 for i in [train_trade, test_trade]:
     i.calculate_indicator(para)
     i.strategy_signal()
     
-    kpi = i.KPI()
-    signal = i.signal
-    signal.plot(kind='line', x='date', y='total_cash')
-    trades = i.record
+    
+    i.signal.plot(kind='line', x='date', y='total_cash')
     print('finished')
