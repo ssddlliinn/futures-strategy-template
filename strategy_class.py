@@ -10,14 +10,16 @@ os.chdir(global_path)
 from get_price_data import main as get_price_data
 from get_other_data import main as get_feature_data
 
-# price必須要有date(datetime)、trade_price(float)、div(float)欄位
-# 以及其他要計算indicator要用的欄位
-price = get_price_data('2018-06-05', '2023-06-30')
-# feature 必須要有date(datetime)以及其他indicator欄位
-feature = get_feature_data('2018-06-05', '2023-06-30')
+def get_all_data(start_date, end_date, price_file, feature_file):
+    # price必須要有date(datetime)、trade_price(float)、div(float)欄位
+    # 以及其他要計算indicator要用的欄位
+    price = get_price_data(start_date, end_date, price_file)
+    # feature 必須要有date(datetime)以及其他indicator欄位
+    feature = get_feature_data(start_date, end_date, feature_file)
 
+    return price, feature
 class futures_Strategy:
-    def __init__(self) -> None: 
+    def __init__(self, price, feature) -> None: 
         self.price_data = price
         self.feature_data = feature
         
@@ -44,9 +46,9 @@ class futures_Strategy:
         # 使用paras dict裡面的參數
         # TODO:
         
-        print(self.indicator.shape)
+        # print(self.indicator.shape)
         self.indicator = self.indicator.dropna()
-        print(self.indicator.shape)
+        # print(self.indicator.shape)
         
     #要套用到indicator df的函數
     def add_signal(self, date, signal, PL, lot, total_cash):
@@ -67,7 +69,8 @@ class futures_Strategy:
         
         #每天都要記錄 #for迴圈跑過indicator決定訊號放入signal
         #必備欄位date、signal、PL(點數)、lot、total_cash(現金)
-        self.signal = pd.DataFrame(columns=['date', 'signal', 'PL', 'lot', 'total_cash'])
+        # self.signal = pd.DataFrame(columns=['date', 'signal', 'PL', 'lot', 'total_cash'])
+        self.signal = pd.DataFrame()
         
         for index, row in self.indicator.iterrows():
             #根據hold_data內的資訊，建立策略機制

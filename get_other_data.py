@@ -5,5 +5,5 @@ import pandas as pd
 import os
 from pathlib import Path
 
-def main(start_date, end_date):
+def main(start_date, end_date, store_file):
     pass

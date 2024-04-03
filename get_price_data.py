@@ -31,11 +31,11 @@ def get_contract_diff(whole_day_data, original):
     return whole_day_data
 
 
-def main(start_date, end_date):
+def main(start_date, end_date, store_file):
     #記得挑一個有交易的起始與終點日
     #從Finmind取得資料或讀csv
-    if 'price_data.csv'in os.listdir(Path(__file__).parent):
-        all_day = pd.read_csv(Path(__file__).parent / 'price_data.csv')
+    if store_file in os.listdir(Path(__file__).parent):
+        all_day = pd.read_csv(Path(__file__).parent / store_file)
         if all_day is not None:
             if (start_date == all_day.iloc[0].date) and (end_date == all_day.iloc[-1].date):
                 all_day['date'] = pd.to_datetime(all_day['date'])
@@ -119,7 +119,7 @@ def main(start_date, end_date):
     else:
         all_day = get_contract_diff(all_day, original=night)
         
-    all_day.to_csv(Path(__file__).parent / 'price_data.csv', index=False)
+    all_day.to_csv(Path(__file__).parent / store_file, index=False)
     all_day['date'] = pd.to_datetime(all_day['date'])
 
     return all_day

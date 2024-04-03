@@ -14,8 +14,7 @@ from pymoo.operators.mutation.pm import PM
 from pymoo.core.problem import Problem
 from pymoo.optimize import minimize
 
-from strategy_class import futures_Strategy
-import os
+from strategy_class import futures_Strategy, get_all_data
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -49,6 +48,8 @@ class trade_problem(Problem):
                 '':xi[1],
                 '':xi[2],
             }
+            
+            
             trade_obj.calculate_indicator(para)
             trade_obj.strategy_signal()
 
@@ -138,5 +139,10 @@ def main(MU, NGEN, CXPB, MUTPB):
 if __name__ == '__main__':
     MU, NGEN, CXPB, MUTPB = 100, 25, 0.8, 0.05
     
-    trade_obj = futures_Strategy()
+    price_data, feature_data = get_all_data('2018-06-05',
+                                            '2023-06-30',
+                                            'price_data.csv',
+                                            'other_data.csv')
+    trade_obj = futures_Strategy(price_data, feature_data)
+    
     main(MU, NGEN, CXPB, MUTPB)
