@@ -13,22 +13,18 @@ def main(start_date, end_date, store_file):
     if store_file in os.listdir(data_path):
         data = pd.read_csv(data_path / store_file)
         if data is not None:
-            dt_start = datetime.strptime(start_date, '%Y-%m-%d')
-            dt_end = datetime.strptime(end_date, '%Y-%m-%d')
             data['date'] = pd.to_datetime(data['date'])
-            # if (start_date == data.iloc[0].date) and (end_date == data.iloc[-1].date):
-            #     return data
-            if (dt_start >= data.iloc[0].date) and(dt_end <= data.iloc[-1].date):
-                return_df = data[(data['date'] >= dt_start) & (data['date'] <= dt_end)]
-                return return_df
+            data = data.set_index(['date'])
+            return data[start_date:end_date]
     
-    #TODO:從finmind讀取資料並作完整處理，留下必要資料
+    #TODO:從finmind讀取資料並作完整處理，留下必要資料(必須要有data column in object format)
     
     
     
     
     data.to_csv(data_path / store_file, index=False)
     data['date'] = pd.to_datetime(data['date'])
+    data = data.set_index(['date'])
     return data
 
 if __name__ == '__main__':

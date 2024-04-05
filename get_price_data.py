@@ -39,14 +39,10 @@ def main(start_date, end_date, store_file):
     if store_file in os.listdir(data_path):
         all_day = pd.read_csv(data_path / store_file)
         if all_day is not None:
-            dt_start = datetime.strptime(start_date, '%Y-%m-%d')
-            dt_end = datetime.strptime(end_date, '%Y-%m-%d')
             all_day['date'] = pd.to_datetime(all_day['date'])
-            # if (start_date == all_day.iloc[0].date) and (end_date == all_day.iloc[-1].date):
-            #     return all_day
-            if (dt_start >= all_day.iloc[0].date) and(dt_end <= all_day.iloc[-1].date):
-                return_df = all_day[(all_day['date'] >= dt_start) & (all_day['date'] <= dt_end)]
-                return return_df
+            all_day = all_day.set_index(['date'])
+            return all_day[start_date:end_date]
+
             
 
     api = DataLoader()
@@ -129,6 +125,7 @@ def main(start_date, end_date, store_file):
         
     all_day.to_csv(data_path / store_file, index=False)
     all_day['date'] = pd.to_datetime(all_day['date'])
+    all_day = all_day.set_index(['date'])
 
     return all_day
 

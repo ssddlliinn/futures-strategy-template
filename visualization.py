@@ -19,7 +19,7 @@ price_data, feature_data = get_all_data('2018-06-05',
 train_trade = futures_Strategy(price_data, feature_data)
 
 today = datetime.now().strftime("%Y-%m-%d")
-price_data_test, feature_data_test = get_all_data('2023-07-01',
+price_data_test, feature_data_test = get_all_data('2023-07-03',
                                                     today,
                                                     'price_data_test.csv',
                                                     'other_data_test.csv')

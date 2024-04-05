@@ -38,7 +38,7 @@ class futures_Strategy:
                 'max':0}
         
     def calculate_indicator(self, paras):
-        self.indicator = self.price_data[['date']].copy()
+        self.indicator = pd.DataFrame(index=self.price_data.index)
         self.paras = paras
         if len(self.indicator) != len(self.feature_data):
             raise "Unmatch length for price and feature"
@@ -76,7 +76,7 @@ class futures_Strategy:
             #根據hold_data內的資訊，建立策略機制
             if self.hold_data['signal'] == 0:
                 #取資料
-                date = row['date']
+                date = row.name
                 price = row['trade_price']
                 #設定進場條件
                 # TODO:
@@ -93,7 +93,7 @@ class futures_Strategy:
                     
             else:
                 #取資料
-                date = row['date']
+                date = row.name
                 price = row['trade_price']
                 adjust = row['div']
                 lot = self.hold_data['lot']
