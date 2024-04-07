@@ -12,6 +12,7 @@ from strategy_class import futures_Strategy, get_all_data
 import pandas as pd
 from datetime import datetime
 
+#TODO: change the other data file name
 price_data, feature_data = get_all_data('2018-06-05',
                                         '2023-06-30',
                                         'price_data.csv',
@@ -29,7 +30,7 @@ test_trade = futures_Strategy(price_data_test, feature_data_test)
 xi = []
 para = {}
 
-for i in [train_trade, test_trade]:
+for i in [train_trade]:
     i.calculate_indicator(para)
     i.strategy_signal()
     
