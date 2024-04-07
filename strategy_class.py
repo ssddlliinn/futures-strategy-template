@@ -104,6 +104,7 @@ class futures_Strategy:
                 unrealized = self.current_asset + (PL*self.point_value*lot)
                 #針對停利所算的歷史最高獲利點數
                 self.hold_data['max'] = max(self.hold_data['max'], PL)
+                # TODO: set about stop profit values(not necessary)
                 
                 #設定出場條件
                 # TODO:
