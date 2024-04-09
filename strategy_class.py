@@ -1,11 +1,13 @@
 
 from FinMind.data import DataLoader
 import pandas as pd
-import os
+import os, sys
 from pathlib import Path
+import plotly.express as px
 
-global_path = Path(__file__).parent
-os.chdir(global_path)
+g_path = Path(__file__).parent
+if str(g_path) not in sys.path:
+    sys.path.append(str(g_path))
 
 from get_price_data import main as get_price_data
 from get_other_data import main as get_feature_data
@@ -281,3 +283,24 @@ class futures_Strategy:
                         'lot':0,
                         'start':False,
                         'max':0}
+        
+
+if __name__ == '__main__':
+    #TODO:
+    price_data, feature_data = get_all_data('2018-06-05',
+                                            '2023-06-30',
+                                            'price_data.csv',
+                                            '.csv')
+    train_trade = futures_Strategy(price_data, feature_data)
+    
+    #TODO:
+    xi = []
+    para = {}
+
+    
+    train_trade.calculate_indicator(para)
+    train_trade.strategy_signal()
+    
+    fig = px.line(train_trade.signal, x='date', y='total_cash')
+    fig.show()
+    print('finished')

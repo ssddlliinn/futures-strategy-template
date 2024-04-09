@@ -11,6 +11,7 @@ if str(g_path) not in sys.path:
 from strategy_class import futures_Strategy, get_all_data
 import pandas as pd
 from datetime import datetime
+import plotly.express as px
 
 #TODO: change the other data file name
 price_data, feature_data = get_all_data('2018-06-05',
@@ -30,10 +31,10 @@ test_trade = futures_Strategy(price_data_test, feature_data_test)
 xi = []
 para = {}
 
-for i in [train_trade]:
+for i in [train_trade, test_trade]:
     i.calculate_indicator(para)
     i.strategy_signal()
     
-    
-    i.signal.plot(kind='line', x='date', y='total_cash')
+    fig = px.line(i.signal, x='date', y='total_cash')
+    fig.show()
     print('finished')
