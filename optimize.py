@@ -61,7 +61,7 @@ class trade_problem(Problem):
             g1 = -f1
             
             f1_list.append(-f1)
-            f2_list.append(f2)
+            f2_list.append(-f2)
             g1_list.append(g1)
             print('.', end='')
             
@@ -138,7 +138,7 @@ def main(MU, NGEN, CXPB, MUTPB):
         csv_writer.writerow([strategy_name, return_mean, mdd_mean])
 
 if __name__ == '__main__':
-    MU, NGEN, CXPB, MUTPB = 100, 25, 0.8, 0.05
+    MU, NGEN, CXPB, MUTPB = 20, 25, 0.8, 0.05
     
     #TODO:
     price_data, feature_data = get_all_data('2018-06-05',

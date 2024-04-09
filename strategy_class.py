@@ -26,7 +26,6 @@ class futures_Strategy:
         self.feature_data = feature
         
         self.original_cash = 1200000
-        self.current_asset = 1200000
         self.fee = 1
         self.point_value = 200
         self.margin = 500000
@@ -58,6 +57,8 @@ class futures_Strategy:
         self.signal = pd.concat([self.signal, new_data], axis=0)
             
     def strategy_signal(self):
+        #reset current asset for reuses
+        self.current_asset = self.original_cash
         #平倉時再紀錄 #再決定訊號函數內，平倉時新增資料
         #成本用調整後、平倉用扣除費用後
         #必備欄位in_date、out_date、signal、lot、cost、cover(點數紀錄)
