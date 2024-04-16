@@ -42,7 +42,7 @@ class futures_Strategy:
         self.indicator = pd.DataFrame(index=self.price_data.index)
         self.paras = paras
         if len(self.indicator) != len(self.feature_data):
-            raise "Unmatch length for price and feature"
+            raise ValueError("Unmatch length for price and feature")
         # 建立trade_price, div以及所有指標在self.indicator上
         # 使用paras dict裡面的參數
         # TODO:
@@ -143,7 +143,8 @@ class futures_Strategy:
                                 self.hold_data['adjust_cost'],
                                 price,
                                 unrealized)
-        
+        self.signal = self.signal.drop_duplicates(['date'], keep='last')
+    
     def KPI(self):
         if self.record.shape[0] == 0:
             output_KPI = {

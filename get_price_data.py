@@ -40,8 +40,13 @@ def main(start_date, end_date, store_file):
         all_day = pd.read_csv(data_path / store_file)
         if all_day is not None:
             all_day['date'] = pd.to_datetime(all_day['date'])
-            all_day = all_day.set_index(['date'])
-            return all_day[start_date:end_date]
+            data_start = all_day.iloc[0].date
+            data_end = all_day.iloc[-1].date
+            start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+            end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+            if (data_start <= start_datetime) and (data_end >= end_datetime):
+                all_day = all_day.set_index(['date'])
+                return all_day[start_date:end_date]
 
             
 

@@ -14,9 +14,14 @@ def main(start_date, end_date, store_file):
         data = pd.read_csv(data_path / store_file)
         if data is not None:
             data['date'] = pd.to_datetime(data['date'])
-            data = data.set_index(['date'])
-            return data[start_date:end_date]
-    
+            data_start = data.iloc[0].date
+            data_end = data.iloc[-1].date
+            start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+            end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+            if (data_start <= start_datetime) and (data_end >= end_datetime):
+                data = data.set_index(['date'])
+                return data[start_date:end_date]
+   
     #TODO:從finmind讀取資料並作完整處理，留下必要資料(必須要有data column in object format)
     
     
